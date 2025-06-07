@@ -115,6 +115,49 @@
 
     // Helper function to add rich content (like buttons) - To be implemented in Section IV
     // window.addRichContentMessage = function(messageData, sender) { /* ... */ };
+    // Add this function below window.addMessage in your IIFE
+    window.addRichContentMessage = function(responseData, sender) {
+        if (!messagesContainer) {
+            console.error("MyChatWidget: messagesContainer not found. Cannot add rich content message.");
+            return;
+        }
+        console.log("MyChatWidget: Adding rich content message with buttons.");
+
+        // Create message bubble container
+        const messageBubble = document.createElement('div');
+        messageBubble.classList.add('message-bubble', sender);
+
+        // If there is a text output, add it first:
+        if (responseData.output) {
+            const textElem = document.createElement('div');
+            textElem.textContent = responseData.output;
+            messageBubble.appendChild(textElem);
+        }
+
+        // Create a container for buttons
+        if (responseData.buttons && Array.isArray(responseData.buttons)) {
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'button-container';
+
+            responseData.buttons.forEach(function(buttonData) {
+                const btn = document.createElement('button');
+                btn.classList.add('message-button');
+                btn.textContent = buttonData.label;
+                // When the button is clicked, send its payload to the backend
+                btn.addEventListener('click', function() {
+                    console.log(`MyChatWidget: Language button "${buttonData.label}" clicked.`);
+                    sendMessageToBackend({ action: 'languageSelect', language: buttonData.payload });
+                    // Optionally disable buttons after selection
+                    [...buttonContainer.children].forEach(b => b.disabled = true);
+                });
+                buttonContainer.appendChild(btn);
+            });
+            messageBubble.appendChild(buttonContainer);
+        }
+
+        messagesContainer.appendChild(messageBubble);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    };
 
     // --- Helper function to Send Messages to Backend ---
     // Needs reference to currentSessionId and config
@@ -168,14 +211,16 @@
 
             // Assuming n8n responds with { "output": "Your bot message" } for now
             // This will be expanded in Section IV to handle different response types
-            if (responseData && typeof responseData.output === 'string') {
-                 console.log("MyChatWidget: Found 'output' string in response. Adding bot message.");
-                 window.addMessage(responseData.output, 'bot');
-                 // Future: Check for responseData.buttons here and call addRichContentMessage
-            } else {
-                 console.warn("MyChatWidget: Webhook response did not contain a string 'output' field or the format was unexpected.", responseData);
-                 // Optional: display a generic error or debug message
-                 // window.addMessage("Received an unexpected response format from the server.", 'bot');
+            if (responseData) {
+                if (responseData.buttons && Array.isArray(responseData.buttons)) {
+                    // Render rich content with buttons
+                    window.addRichContentMessage(responseData, 'bot');
+                } else if (typeof responseData.output === 'string') {
+                    console.log("MyChatWidget: Found 'output' string in response. Adding bot message.");
+                    window.addMessage(responseData.output, 'bot');
+                } else {
+                    console.warn("MyChatWidget: Response format not recognized.", responseData);
+                }
             }
 
 
@@ -191,6 +236,8 @@
             // Remove typing indicator? (Optional enhancement)
         }
     }
+
+    
 
     // --- CSS Styles (Corrected typo) ---
      const styles = `
