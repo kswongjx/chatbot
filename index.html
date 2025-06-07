@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Chat Widget Test</title>
+
+    <!-- Load Private Configuration (NOT COMMITTED TO GIT) -->
+    <!-- Ensure config.js is in the same directory as index.html -->
+    <script src="config.js"></script>
+
+    <!-- Widget Configuration - Reads from Private Config -->
+    <script>
+        window.MyChatWidgetConfig = {
+            webhook: {
+                // Reads the URL from the object loaded by config.js
+                url: window._MyChatWidgetPrivateConfig.webhookUrl,
+            },
+            branding: {
+                logo: 'img/logo.jpg', // Adjust path if needed, assuming 'img' folder
+                name: 'imagin.HK', // your company name
+                welcomeText: 'Click below to start chatting!', // Prompt user to start
+            },
+            style: {
+                primaryColor: '#1a73e8', // Google Blue
+                secondaryColor: '#4285f4', // Lighter Google Blue
+                position: 'right', // 'right' or 'left'
+                backgroundColor: '#ffffff',
+                fontColor: '#333333'
+            }
+        };
+
+        // Optional: Clean up the global private config object after use
+        // delete window._MyChatWidgetPrivateConfig; // Be careful if other scripts need it
+    </script>
+
+    <!-- Your Custom Chat Widget Script -->
+    <!-- Ensure this path is correct relative to your index.html -->
+    <script src="js/chat-widget-custom.js" defer></script>
+
+</head>
+<body>
+    <h1>Welcome to the Custom Chat Test Page - Communication</h1>
+    <p>This page tests the custom chat widget connected to an n8n backend.</p>
+    <p>Click the floating button, then click "Start New Chat" to begin.</p>
+    <p>Webhook URL is loaded from config.js (ensure this file is present but not committed).</p>
+
+    <!-- The custom chat widget UI will be injected here -->
+
+</body>
+</html>
