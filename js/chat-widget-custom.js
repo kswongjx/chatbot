@@ -384,16 +384,15 @@
          }
 
 
-        .my-chat-widget .chat-messages {
-            flex-grow: 1; /* Take up available space */
-            overflow-y: auto; /* Make messages scrollable */
+         .my-chat-widget .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
             padding: 15px;
             display: flex;
-            flex-direction: column; /* Stack messages vertically */
-             /* Custom scrollbar (optional) */
-            scrollbar-width: thin;
-            scrollbar-color: var(--chat-secondary-color) transparent;
+            flex-direction: column;
+            min-height: 0; /* Allow the element to shrink */
         }
+        
 
          .my-chat-widget .chat-messages::-webkit-scrollbar {
             width: 8px;
