@@ -106,20 +106,25 @@ window.addMessage = function(text, sender) {
     console.log(`MyChatWidget (addMessage): Adding message to UI (Sender: ${sender}): "${text}"`);
     const messageBubble = document.createElement('div');
     messageBubble.classList.add('message-bubble', sender);
-    messageBubble.textContent = text;
+
+     // DANGER: Only use innerHTML if you TRUST the source of 'text'.
+    // If 'text' can come from user input displayed as a bot message without sanitization,
+    // this is a Cross-Site Scripting (XSS) vulnerability.
+    // For n8n-generated content where you control the HTML, it's generally acceptable.
+    if (sender === 'bot') { // Apply only for bot messages where you control the HTML
+        messageBubble.innerHTML = text; // Renders HTML
+    } else {
+        messageBubble.textContent = text; // User messages should always be textContent for security
+    }
 
     messagesContainer.appendChild(messageBubble);
 
-    // --- SCROLL DEBUGGING ---
-    console.log("MyChatWidget (addMessage): messagesContainer.clientHeight:", messagesContainer.clientHeight);
-    console.log("MyChatWidget (addMessage): messagesContainer.scrollHeight:", messagesContainer.scrollHeight);
-    console.log("MyChatWidget (addMessage): Current messagesContainer.scrollTop:", messagesContainer.scrollTop);
-
-    // Attempt to scroll
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-    console.log("MyChatWidget (addMessage): NEW messagesContainer.scrollTop after setting:", messagesContainer.scrollTop);
-    // --- END SCROLL DEBUGGING ---
+ setTimeout(() => {
+        // console.log("MyChatWidget (addMessage - setTimeout): messagesContainer.clientHeight:", messagesContainer.clientHeight);
+        // console.log("MyChatWidget (addMessage - setTimeout): messagesContainer.scrollHeight:", messagesContainer.scrollHeight);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // console.log("MyChatWidget (addMessage - setTimeout): NEW messagesContainer.scrollTop after setting:", messagesContainer.scrollTop);
+    }, 0);
 };
 
     // Helper function to add rich content (like buttons) - To be implemented in Section IV
@@ -135,9 +140,16 @@ window.addRichContentMessage = function(responseData, sender) {
     const messageBubble = document.createElement('div');
     messageBubble.classList.add('message-bubble', sender);
 
-    if (responseData.output) {
+ if (responseData.output) {
         const textElem = document.createElement('div');
-        textElem.textContent = responseData.output;
+        // Apply the same innerHTML logic here for bot messages
+        if (sender === 'bot') {
+            textElem.innerHTML = responseData.output; // Renders HTML from n8n
+        } else {
+            // This case (sender !== 'bot' for rich content) is unlikely with current setup
+            // but good to be consistent.
+            textElem.textContent = responseData.output;
+        }
         messageBubble.appendChild(textElem);
     }
 
@@ -185,14 +197,12 @@ window.addRichContentMessage = function(responseData, sender) {
 
     messagesContainer.appendChild(messageBubble);
 
- // --- SCROLL DEBUGGING ---
-    console.log("MyChatWidget (addRichContentMessage): messagesContainer.clientHeight:", messagesContainer.clientHeight);
-    console.log("MyChatWidget (addRichContentMessage): messagesContainer.scrollHeight:", messagesContainer.scrollHeight);
-    console.log("MyChatWidget (addRichContentMessage): Current messagesContainer.scrollTop:", messagesContainer.scrollTop);    
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
- console.log("MyChatWidget (addRichContentMessage): NEW messagesContainer.scrollTop after setting:", messagesContainer.scrollTop);
-    // --- END SCROLL DEBUGGING ---    
+ setTimeout(() => {
+        // console.log("MyChatWidget (addRichContentMessage - setTimeout): messagesContainer.clientHeight:", messagesContainer.clientHeight);
+        // console.log("MyChatWidget (addRichContentMessage - setTimeout): messagesContainer.scrollHeight:", messagesContainer.scrollHeight);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // console.log("MyChatWidget (addRichContentMessage - setTimeout): NEW messagesContainer.scrollTop after setting:", messagesContainer.scrollTop);
+    }, 0);  
 };
 
     // --- Helper function to Send Messages to Backend ---
