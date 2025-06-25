@@ -98,30 +98,39 @@
 
     // Helper function to add messages to UI (can be expanded later)
     // Needs reference to messagesContainer
-    window.addMessage = function(text, sender) {
-        if (!messagesContainer) {
-             console.error("MyChatWidget: messagesContainer not found. Cannot add message.");
-             return;
-        }
-        console.log(`MyChatWidget: Adding message to UI (Sender: ${sender}): "${text}"`);
-        const messageBubble = document.createElement('div');
-        messageBubble.classList.add('message-bubble', sender); // 'user' or 'bot'
-        messageBubble.textContent = text;
-         // Future: check for button data here and call addRichContentMessage
+window.addMessage = function(text, sender) {
+    if (!messagesContainer) {
+         console.error("MyChatWidget (addMessage): messagesContainer not found. Cannot add message.");
+         return;
+    }
+    console.log(`MyChatWidget (addMessage): Adding message to UI (Sender: ${sender}): "${text}"`);
+    const messageBubble = document.createElement('div');
+    messageBubble.classList.add('message-bubble', sender);
+    messageBubble.textContent = text;
 
-        messagesContainer.appendChild(messageBubble);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight; // Auto-scroll
-    };
+    messagesContainer.appendChild(messageBubble);
+
+    // --- SCROLL DEBUGGING ---
+    console.log("MyChatWidget (addMessage): messagesContainer.clientHeight:", messagesContainer.clientHeight);
+    console.log("MyChatWidget (addMessage): messagesContainer.scrollHeight:", messagesContainer.scrollHeight);
+    console.log("MyChatWidget (addMessage): Current messagesContainer.scrollTop:", messagesContainer.scrollTop);
+
+    // Attempt to scroll
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    console.log("MyChatWidget (addMessage): NEW messagesContainer.scrollTop after setting:", messagesContainer.scrollTop);
+    // --- END SCROLL DEBUGGING ---
+};
 
     // Helper function to add rich content (like buttons) - To be implemented in Section IV
     // window.addRichContentMessage = function(messageData, sender) { /* ... */ };
     // Add this function below window.addMessage in your IIFE
-    window.addRichContentMessage = function(responseData, sender) {
+window.addRichContentMessage = function(responseData, sender) {
     if (!messagesContainer) {
-        console.error("MyChatWidget: messagesContainer not found. Cannot add rich content message.");
+        console.error("MyChatWidget (addRichContentMessage): messagesContainer not found. Cannot add rich content message.");
         return;
     }
-    console.log("MyChatWidget: Adding rich content message with buttons.", responseData);
+    console.log("MyChatWidget (addRichContentMessage): Adding rich content message.", responseData);
 
     const messageBubble = document.createElement('div');
     messageBubble.classList.add('message-bubble', sender);
@@ -175,7 +184,15 @@
     }
 
     messagesContainer.appendChild(messageBubble);
+
+ // --- SCROLL DEBUGGING ---
+    console.log("MyChatWidget (addRichContentMessage): messagesContainer.clientHeight:", messagesContainer.clientHeight);
+    console.log("MyChatWidget (addRichContentMessage): messagesContainer.scrollHeight:", messagesContainer.scrollHeight);
+    console.log("MyChatWidget (addRichContentMessage): Current messagesContainer.scrollTop:", messagesContainer.scrollTop);    
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+ console.log("MyChatWidget (addRichContentMessage): NEW messagesContainer.scrollTop after setting:", messagesContainer.scrollTop);
+    // --- END SCROLL DEBUGGING ---    
 };
 
     // --- Helper function to Send Messages to Backend ---
@@ -277,21 +294,21 @@
             box-sizing: border-box; /* Include padding and border in element's total width and height */
         }
 
-        .my-chat-widget .chat-container {
-            position: fixed;
-            bottom: 20px;
-            /* Default to right, overridden by position-left */
-            right: 20px;
-            z-index: 1000;
-            display: none; /* Hidden by default */
-            width: 350px; /* Adjust size as needed */
-            height: 500px; /* Adjust size as needed */
-            background: var(--chat-background-color);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-            flex-direction: column; /* Use flexbox for internal layout */
-        }
+.my-chat-widget .chat-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: none;
+    width: 350px;
+    height: 500px; /* FIXED HEIGHT FOR WIDGET */
+    background: var(--chat-background-color);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    /* overflow: hidden; */ /* Usually good, but let's test without it first on this parent */
+    display: flex; /* CHANGED: chat-container itself should be flex to manage header and interface heights */
+    flex-direction: column;
+}
 
         .my-chat-widget .chat-container.position-left {
             right: auto; /* Remove right positioning */
@@ -302,15 +319,12 @@
             display: flex; /* Show when 'open' class is added */
         }
 
-        .my-chat-widget .chat-header {
-            padding: 12px 16px;
-            background: linear-gradient(135deg, var(--chat-primary-color) 0%, var(--chat-secondary-color) 100%);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0; /* Don't shrink */
-        }
+/* Ensure header doesn't grow or shrink */
+.my-chat-widget .chat-header {
+    padding: 12px 16px;
+    /* ... other styles ... */
+    flex-shrink: 0; /* Already there, good */
+}
 
         .my-chat-widget .header-brand {
             display: flex;
@@ -391,26 +405,28 @@
         }
 
 
-        .my-chat-widget .chat-interface {
-            display: flex; /* Hidden by default */
-            flex-direction: column;
-            flex-grow: 1;
-            /* Initial messages go here if needed before input area */
-        }
+/* This is the crucial intermediate container */
+.my-chat-widget .chat-interface {
+    flex-grow: 1; /* Take up remaining vertical space in chat-container */
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* VERY IMPORTANT: Allows this flex item to shrink below its content size */
+    overflow: hidden; /* Prevent this from overflowing; scrolling happens in .chat-messages */
+}
 
-         .my-chat-widget .chat-interface:not(.active) {
-             display: none; /* Hide if not active */
-         }
+.my-chat-widget .chat-interface:not(.active) {
+     display: none;
+ }
 
 
-         .my-chat-widget .chat-messages {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            min-height: 0; /* Allow the element to shrink */
-        }
+.my-chat-widget .chat-messages {
+    flex-grow: 1; /* Take up remaining space WITHIN chat-interface */
+    overflow-y: auto; /* Enable vertical scrolling */
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* VERY IMPORTANT: Allows this inner flex item to shrink and its content to overflow */
+}
         
 
          .my-chat-widget .chat-messages::-webkit-scrollbar {
@@ -666,6 +682,18 @@
                  if (newConversationScreen) newConversationScreen.style.display = 'flex';
                  chatInterface.classList.remove('active');
              }
+
+              // --- SCROLL DEBUGGING ON OPEN ---
+            if (messagesContainer) { // Ensure it exists
+                console.log("MyChatWidget (toggleButton open): Forcing scroll to bottom on open.");
+                console.log("MyChatWidget (toggleButton open): messagesContainer.clientHeight:", messagesContainer.clientHeight);
+                console.log("MyChatWidget (toggleButton open): messagesContainer.scrollHeight:", messagesContainer.scrollHeight);
+                // Use a slight delay to ensure layout is complete
+                setTimeout(() => {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    console.log("MyChatWidget (toggleButton open): NEW messagesContainer.scrollTop after setting:", messagesContainer.scrollTop);
+                }, 50); // Small delay
+            }
          } else {
              console.log("MyChatWidget: Chat window closing.");
          }

@@ -16,6 +16,8 @@ Markdown
 └── img/
 └── logo.jpg # Placeholder for your logo
 
+Current version: v1.2
+
 ## Current Features (v1.1)
 
 - **Basic Chat UI:** Toggle button, chat window, header, message display area, text input.
@@ -173,7 +175,7 @@ action (String, Required): The action value that the widget will send back to n8
 payload (Object, Required): An object containing key-value pairs. When the button is clicked, these key-value pairs will be included at the root level of the JSON object sent back to n8n (alongside sessionId and the button's action).
 
 ## Known Issues
-Chat Widget Scrolling: The chat message area currently may not reliably scroll to the newest message automatically in all scenarios or might lack manual scrollability. Further investigation and fixes are needed for smooth scroll behavior.
+v1.2 Fixed: Chat Widget Scrolling: The chat message area currently may not reliably scroll to the newest message automatically in all scenarios or might lack manual scrollability. Further investigation and fixes are needed for smooth scroll behavior.
 
 ## To-Do
 "Restart Chat" Button: Implement an in-widget button that allows the user to explicitly clear the current session (both in localStorage and potentially by sending a "killSession" or "restartSession" action to n8n) and start fresh from the welcome screen without needing to manually clear browser cache/storage.
