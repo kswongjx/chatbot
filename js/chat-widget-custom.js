@@ -117,47 +117,66 @@
     // window.addRichContentMessage = function(messageData, sender) { /* ... */ };
     // Add this function below window.addMessage in your IIFE
     window.addRichContentMessage = function(responseData, sender) {
-        if (!messagesContainer) {
-            console.error("MyChatWidget: messagesContainer not found. Cannot add rich content message.");
-            return;
-        }
-        console.log("MyChatWidget: Adding rich content message with buttons.");
+    if (!messagesContainer) {
+        console.error("MyChatWidget: messagesContainer not found. Cannot add rich content message.");
+        return;
+    }
+    console.log("MyChatWidget: Adding rich content message with buttons.", responseData);
 
-        // Create message bubble container
-        const messageBubble = document.createElement('div');
-        messageBubble.classList.add('message-bubble', sender);
+    const messageBubble = document.createElement('div');
+    messageBubble.classList.add('message-bubble', sender);
 
-        // If there is a text output, add it first:
-        if (responseData.output) {
-            const textElem = document.createElement('div');
-            textElem.textContent = responseData.output;
-            messageBubble.appendChild(textElem);
-        }
+    if (responseData.output) {
+        const textElem = document.createElement('div');
+        textElem.textContent = responseData.output;
+        messageBubble.appendChild(textElem);
+    }
 
-        // Create a container for buttons
-        if (responseData.buttons && Array.isArray(responseData.buttons)) {
-            const buttonContainer = document.createElement('div');
-            buttonContainer.className = 'button-container';
+    if (responseData.buttons && Array.isArray(responseData.buttons)) {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'button-container';
 
-            responseData.buttons.forEach(function(buttonData) {
-                const btn = document.createElement('button');
-                btn.classList.add('message-button');
-                btn.textContent = buttonData.label;
-                // When the button is clicked, send its payload to the backend
-                btn.addEventListener('click', function() {
-                    console.log(`MyChatWidget: Language button "${buttonData.label}" clicked.`);
-                    sendMessageToBackend({ action: 'languageSelect', language: buttonData.payload });
-                    // Optionally disable buttons after selection
-                    [...buttonContainer.children].forEach(b => b.disabled = true);
+        responseData.buttons.forEach(function(buttonData) {
+            const btn = document.createElement('button');
+            btn.classList.add('message-button');
+            btn.textContent = buttonData.label;
+
+            btn.addEventListener('click', function() {
+                console.log(`MyChatWidget: Button "${buttonData.label}" clicked. Action: ${buttonData.action}, Payload:`, buttonData.payload);
+
+                // Add the button's text as a user message for better UX
+                window.addMessage(buttonData.label, 'user');
+
+                // Construct the message payload dynamically
+                // It expects buttonData.action (e.g., "languageSelect", "aiOptionSelected")
+                // and buttonData.payload (which should be an object, e.g., {"language": "en"} or {"choice": "option_a"})
+                const messageToSend = {
+                    action: buttonData.action,
+                    // Spread the payload object from the button data.
+                    // If buttonData.payload is { "language": "en" }, this adds language: "en" to messageToSend.
+                    // If buttonData.payload is { "choice": "option_a" }, this adds choice: "option_a".
+                    // If buttonData.payload is a simple string (legacy or simple use case), it sends { data: "string_payload" }
+                    ...(typeof buttonData.payload === 'object' && buttonData.payload !== null ? buttonData.payload : { data: buttonData.payload })
+                };
+
+                sendMessageToBackend(messageToSend);
+
+                // Disable all buttons in this group after one is clicked
+                // and mark the clicked one as selected
+                [...buttonContainer.children].forEach(b => {
+                    b.disabled = true;
+                    b.classList.add('disabled-button'); // General disabled style
                 });
-                buttonContainer.appendChild(btn);
+                btn.classList.add('selected-button'); // Specific style for the one clicked
             });
-            messageBubble.appendChild(buttonContainer);
-        }
+            buttonContainer.appendChild(btn);
+        });
+        messageBubble.appendChild(buttonContainer);
+    }
 
-        messagesContainer.appendChild(messageBubble);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    };
+    messagesContainer.appendChild(messageBubble);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+};
 
     // --- Helper function to Send Messages to Backend ---
     // Needs reference to currentSessionId and config
@@ -535,6 +554,24 @@
              fill: currentColor; /* Use button color */
         }
 
+        .my-chat-widget .message-bubble.bot .message-button.selected-button {
+        background: var(--chat-primary-color) !important; /* Ensure override */
+        color: white !important;
+        border-color: var(--chat-primary-color) !important;
+        opacity: 1 !important;
+        }
+        .my-chat-widget .message-bubble.bot .message-button:disabled, /* General disabled state */
+        .my-chat-widget .message-bubble.bot .message-button.disabled-button { /* Explicit class if needed */
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        /* Style for disabled buttons that were NOT selected */
+        .my-chat-widget .message-bubble.bot .message-button:disabled:not(.selected-button),
+        .my-chat-widget .message-bubble.bot .message-button.disabled-button:not(.selected-button) {
+            background: rgba(0,0,0,0.03);
+            border-color: rgba(0,0,0,0.05);
+            color: var(--chat-font-color); /* Or a muted version of font color */
+        }
     `;
 
 
